@@ -64,4 +64,10 @@ public class ProjectController {
         service.reorder(orderedIds);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/open-folder")
+    public ResponseEntity<Void> openFolder(@PathVariable String id) {
+        service.openFolder(id);
+        return ResponseEntity.noContent().build();
+    }
 }

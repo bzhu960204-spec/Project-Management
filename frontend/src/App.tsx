@@ -101,6 +101,12 @@ export function App() {
     }
   }
 
+  const handleOpenFolder = async (p: ProjectDto) => {
+    setError(null)
+    try { await projectsApi.openFolder(p.id) }
+    catch (e) { setError(extractError(e)) }
+  }
+
   return (
     <div className="app">
       <div className="header">
@@ -125,6 +131,7 @@ export function App() {
             onSync={setSyncFor}
             onGitRefresh={(p) => fetchGitStatus(p.id, true)}
             onReorder={handleReorder}
+            onOpenFolder={handleOpenFolder}
           />
         )}
       </div>

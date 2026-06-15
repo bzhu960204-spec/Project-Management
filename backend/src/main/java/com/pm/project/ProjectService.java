@@ -7,9 +7,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -87,6 +90,33 @@ public class ProjectService {
                     .orElseThrow(() -> new NotFoundException("Project not found"));
             p.setSortOrder(i);
             repo.save(p);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public void openFolder(String id) {
+        Project p = repo.findById(id).orElseThrow(() -> new NotFoundException("Project not found: " + id));
+        String root = p.getRootDirectory();
+        if (root == null || root.isBlank()) {
+            throw new IllegalStateException("Project has no root directory configured.");
+        }
+        File dir = new File(root);
+        if (!dir.exists() || !dir.isDirectory()) {
+            throw new IllegalStateException("Root directory does not exist: " + root);
+        }
+        String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+        ProcessBuilder pb;
+        if (os.contains("win")) {
+            pb = new ProcessBuilder("explorer.exe", dir.getAbsolutePath());
+        } else if (os.contains("mac") || os.contains("darwin")) {
+            pb = new ProcessBuilder("open", dir.getAbsolutePath());
+        } else {
+            pb = new ProcessBuilder("xdg-open", dir.getAbsolutePath());
+        }
+        try {
+            pb.start();
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to open folder: " + e.getMessage(), e);
         }
     }
 

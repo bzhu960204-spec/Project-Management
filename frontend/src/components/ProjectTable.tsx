@@ -14,6 +14,7 @@ interface Props {
   onSync: (p: ProjectDto) => void
   onGitRefresh: (p: ProjectDto) => void
   onReorder: (orderedIds: string[]) => void
+  onOpenFolder: (p: ProjectDto) => void
 }
 
 function pickOpenPort(p: ProjectDto): number | null {
@@ -114,7 +115,7 @@ function renderGit(
   )
 }
 
-export function ProjectTable({ projects, busyId, gitStatus, gitLoading, onStart, onStop, onEdit, onDelete, onLogs, onSync, onGitRefresh, onReorder }: Props) {
+export function ProjectTable({ projects, busyId, gitStatus, gitLoading, onStart, onStop, onEdit, onDelete, onLogs, onSync, onGitRefresh, onReorder, onOpenFolder }: Props) {
   const dragItem = useRef<number | null>(null)
   const dragOverItem = useRef<number | null>(null)
   const [dragIdx, setDragIdx] = useState<number | null>(null)
@@ -184,7 +185,16 @@ export function ProjectTable({ projects, busyId, gitStatus, gitLoading, onStart,
               <td>{p.pid ?? '-'}</td>
               <td>{uptime(p.startedAt)}</td>
               <td>{renderGit(p, gitStatus[p.id], !!gitLoading[p.id], busy, onSync, onGitRefresh)}</td>
-              <td className="muted" style={{ maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.rootDirectory}</td>
+              <td className="root-cell muted">
+                <button
+                  className="open-folder-btn"
+                  title="在文件资源管理器中打开此目录"
+                  onClick={() => onOpenFolder(p)}
+                >
+                  📂
+                </button>
+                <span className="root-path" title={p.rootDirectory}>{p.rootDirectory}</span>
+              </td>
               <td className="actions">
                 {!running && !external && (
                   <button className="success" disabled={busy} onClick={() => onStart(p)}>Start</button>

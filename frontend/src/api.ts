@@ -20,6 +20,7 @@ export const projectsApi = {
   start: (id: string) => api.post<ProjectDto>(`/projects/${id}/start`).then(r => r.data),
   stop: (id: string) => api.post<ProjectDto>(`/projects/${id}/stop`).then(r => r.data),
   reorder: (orderedIds: string[]) => api.put('/projects/reorder', orderedIds),
+  openFolder: (id: string) => api.post(`/projects/${id}/open-folder`),
 }
 
 export interface LogFileEntry {

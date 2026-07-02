@@ -44,6 +44,10 @@ export interface GitSyncResultDto {
   status: GitStatusDto
 }
 
+export interface AppSettings {
+  javaHome: string | null
+}
+
 export interface ProjectFormValues {
   name: string
   rootDirectory: string

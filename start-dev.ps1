@@ -39,6 +39,21 @@ $frontendDir = Join-Path $scriptRoot 'frontend'
 if (-not (Test-Path $backendDir)) { throw "Backend directory not found: $backendDir" }
 if (-not (Test-Path $frontendDir)) { throw "Frontend directory not found: $frontendDir" }
 
+# ── Java override (optional) ──────────────────────────────────────────────────
+# Create .java-home in the project root with a single line containing the JDK
+# path. The file is gitignored, so each machine can have its own setting.
+# Example:  C:\Users\bob.zhu\jdk-17.0.19+10
+$javaHomeFile = Join-Path $scriptRoot '.java-home'
+if (Test-Path $javaHomeFile) {
+  $jh = (Get-Content $javaHomeFile -Raw).Trim()
+  if ($jh) {
+    $env:JAVA_HOME = $jh
+    $env:Path = "$jh\bin;$env:Path"
+    Write-Host "[java] JAVA_HOME -> $jh"
+  }
+}
+# ─────────────────────────────────────────────────────────────────────────────
+
 if ($StopExisting) {
   Stop-ListeningProcessByPort -Port $BackendPort
   Stop-ListeningProcessByPort -Port $FrontendPort
@@ -63,11 +78,15 @@ $stateFile = Join-Path $scriptRoot '.pm-dev-state.json'
 
 Write-Host "Starting Project Management backend on port $BackendPort..."
 $backendJob = Start-Job -Name 'pm-backend' -ScriptBlock {
-  param([string]$Dir, [int]$Port)
+  param([string]$Dir, [int]$Port, [string]$JavaHome)
   Set-Location $Dir
   $env:SERVER_PORT = "$Port"
+  if ($JavaHome) {
+    $env:JAVA_HOME = $JavaHome
+    $env:Path = "$JavaHome\bin;$env:Path"
+  }
   & mvn spring-boot:run 2>&1 | ForEach-Object { $_.ToString() }
-} -ArgumentList $backendDir, $BackendPort
+} -ArgumentList $backendDir, $BackendPort, $env:JAVA_HOME
 
 Write-Host "Waiting for backend to be ready on port $BackendPort..."
 $maxWait = 120

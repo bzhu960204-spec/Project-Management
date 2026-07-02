@@ -20,6 +20,10 @@ backend/data/*.lock.db
 # ── Dev state ────────────────────────────────────────────────────
 .pm-dev-state.json
 
+# ── Machine-local config ─────────────────────────────────────────
+# See README — Java override for this PM app itself.
+.java-home
+
 # ── IDE / editor ─────────────────────────────────────────────────
 .idea/
 *.iml

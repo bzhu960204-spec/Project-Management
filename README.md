@@ -49,6 +49,27 @@ For each project register:
 2. Walk the recorded PID via `ProcessHandle.descendants()` and `destroyForcibly()` everything
 3. As a belt-and-braces fallback, kill any process still listening on declared ports
 
+## Java version configuration
+
+This project requires **Java 17**. If the machine's default `java` is a different version (e.g. JDK 8), you can override it in two places:
+
+### For the PM app itself (Maven / Spring Boot startup)
+
+Create a file named `.java-home` in the project root (it is gitignored, so each machine has its own copy).
+Put the JDK path as a single line — no quotes, no extra text:
+
+```
+C:\Users\bob.zhu\jdk-17.0.19+10
+```
+
+`start-dev.ps1` reads this file on every launch and sets `JAVA_HOME` + prepends `\bin` to `PATH` before starting Maven. If the file does not exist, the system default is used unchanged.
+
+### For projects managed by PM (start/stop commands)
+
+Open **Settings** (⚙ in the sidebar) and enter the JAVA_HOME path there.
+PM injects `JAVA_HOME` and `PATH` into every child process it launches.
+Leave it blank to use the system default.
+
 ## Security
 
 The backend binds to `127.0.0.1` and executes arbitrary user-supplied shell commands. **Do not expose it to the LAN.**

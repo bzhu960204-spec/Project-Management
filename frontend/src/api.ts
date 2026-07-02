@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { GitStatusDto, GitSyncResultDto, ProjectCategory, ProjectDto } from './types'
+import type { AppSettings, GitStatusDto, GitSyncResultDto, ProjectCategory, ProjectDto } from './types'
 
 const api = axios.create({ baseURL: '/api' })
 
@@ -35,6 +35,11 @@ export const gitApi = {
     api.get<GitStatusDto>(`/projects/${id}/git/status`, { params: { refresh } }).then(r => r.data),
   sync: (id: string, message: string) =>
     api.post<GitSyncResultDto>(`/projects/${id}/git/sync`, { message }).then(r => r.data),
+}
+
+export const settingsApi = {
+  get: () => api.get<AppSettings>('/settings').then(r => r.data),
+  save: (s: AppSettings) => api.put<AppSettings>('/settings', s).then(r => r.data),
 }
 
 export const logsApi = {

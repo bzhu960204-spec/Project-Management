@@ -3,6 +3,8 @@ package com.pm.process;
 import com.pm.project.Project;
 import com.pm.project.ProjectRepository;
 import com.pm.project.ProjectStatus;
+import com.pm.settings.AppSettings;
+import com.pm.settings.AppSettingsRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class ProcessSupervisor {
 
     private final RuntimeStateRepository runtimeRepo;
     private final ProjectRepository projectRepo;
+    private final AppSettingsRepository settingsRepo;
     private final ConcurrentHashMap<String, ManagedProcess> live = new ConcurrentHashMap<>();
 
     @Value("${pm.logs.dir}")
@@ -38,9 +41,11 @@ public class ProcessSupervisor {
     @Value("${pm.shutdown.kill-children:true}")
     private boolean killChildrenOnShutdown;
 
-    public ProcessSupervisor(RuntimeStateRepository runtimeRepo, ProjectRepository projectRepo) {
+    public ProcessSupervisor(RuntimeStateRepository runtimeRepo, ProjectRepository projectRepo,
+                              AppSettingsRepository settingsRepo) {
         this.runtimeRepo = runtimeRepo;
         this.projectRepo = projectRepo;
+        this.settingsRepo = settingsRepo;
     }
 
     @PostConstruct
@@ -113,6 +118,7 @@ public class ProcessSupervisor {
         pb.directory(workDir);
         pb.redirectErrorStream(true);
         applyUtf8AndNoColorEnv(pb);
+        applyConfiguredJavaHome(pb);
 
         Process p;
         try {
@@ -152,6 +158,7 @@ public class ProcessSupervisor {
                 pb.directory(new File(project.getRootDirectory()));
                 pb.redirectErrorStream(true);
                 applyUtf8AndNoColorEnv(pb);
+                applyConfiguredJavaHome(pb);
                 Process p = pb.start();
                 p.waitFor(20, TimeUnit.SECONDS);
                 if (p.isAlive()) p.destroyForcibly();
@@ -260,6 +267,19 @@ public class ProcessSupervisor {
         portCache.put(project.getId(), filtered);
         portCacheTs.put(project.getId(), new long[]{now});
         return filtered;
+    }
+
+    /** Injects JAVA_HOME and prepends its bin/ to PATH when the user has configured one. */
+    private void applyConfiguredJavaHome(ProcessBuilder pb) {
+        settingsRepo.findById(1)
+                .map(AppSettings::getJavaHome)
+                .filter(jh -> jh != null && !jh.isBlank())
+                .ifPresent(javaHome -> {
+                    var env = pb.environment();
+                    env.put("JAVA_HOME", javaHome);
+                    String current = env.getOrDefault("PATH", env.getOrDefault("Path", ""));
+                    env.put("PATH", javaHome + "\\bin;" + current);
+                });
     }
 
     private static void applyUtf8AndNoColorEnv(ProcessBuilder pb) {

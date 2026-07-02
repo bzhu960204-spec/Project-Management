@@ -5,6 +5,7 @@ import { ProjectTable } from './components/ProjectTable'
 import { ProjectFormModal } from './components/ProjectFormModal'
 import { LogsDrawer } from './components/LogsDrawer'
 import { GitSyncModal } from './components/GitSyncModal'
+import { SettingsModal } from './components/SettingsModal'
 import { Sidebar, categoryTitle, type CategoryFilter, type SidebarMode } from './components/Sidebar'
 
 const VALID_CATEGORIES: CategoryFilter[] = ['ALL', 'APPLICATION', 'DATABASE', 'SCRIPT', 'OTHER']
@@ -33,6 +34,7 @@ export function App() {
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>(readHashCategory())
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>(readSidebarMode())
   const [sidebarFloating, setSidebarFloating] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
   const refresh = useCallback(async () => {
     try {
@@ -157,6 +159,7 @@ export function App() {
         onExpandPinned={() => { setSidebarMode('expanded'); setSidebarFloating(false) }}
         onOpenFloating={() => setSidebarFloating(true)}
         onCloseFloating={() => setSidebarFloating(false)}
+        onOpenSettings={() => setShowSettings(true)}
       />
       <div className="app-main">
         <div className="header">
@@ -210,6 +213,9 @@ export function App() {
             if (changed) fetchGitStatus(id, true)
           }}
         />
+      )}
+      {showSettings && (
+        <SettingsModal onClose={() => setShowSettings(false)} />
       )}
     </div>
   )
